@@ -1,275 +1,154 @@
 import os
 import sys
 import subprocess
-import pkg_resources
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 ALL_PACKAGES = [
-    "requests",
-    "selenium",
-    "beautifulsoup4",
-    "bs4",
-    "mechanize",
-    "pysocks",
-    "curl2pyreqs",
-    "user_agent",
-    "fake_useragent",
-    "generate_user_agent",
-    "urllib3",
-    "pytelegrambotapi",
-    "python-telegram-bot",
-    "telegram",
-    "telebot",
-    "instaloader",
-    "instagrapi",
-    "instagram-private-api",
-    "colorama",
-    "rich",
-    "pyfiglet",
-    "cfonts",
-    "python-cfonts",
-    "pystyle",
-    "fade",
-    "termcolor",
-    "colored",
-    "pycryptodome",
-    "youtube-dl",
-    "pafy",
-    "uuid",
-    "secrets",
-    "argparse",
-    "twython",
-    "tweepy",
-    "facebook-sdk",
-    "discord.py",
-    "scrapy",
-    "lxml",
-    "html5lib",
-    "pyquery",
-    "selenium-wire",
-    "undetected-chromedriver",
-    "numpy",
-    "pandas",
-    "matplotlib",
-    "pillow",
-    "opencv-python",
-    "cryptography",
-    "bcrypt",
-    "passlib",
-    "jwt",
-    "oauthlib",
-    "tqdm",
-    "progress",
-    "pyperclip",
-    "pyautogui",
-    "keyboard",
-    "mouse",
-    "pygetwindow",
-    "pytest",
-    "unittest2",
-    "logging",
-    "debugpy",
-    "pymongo",
-    "mysql-connector-python",
-    "redis",
-    "asyncio",
-    "aiohttp",
-    "multiprocessing",
-    "concurrent",
-    "pydub",
-    "playsound",
-    "pygame",
-    "moviepy",
-    "google-api-python-client",
-    "spotipy",
-    "giphy-client",
-    "imgurpython",
-    "psutil",
-    "platform",
-    "shutil",
-    "glob2",
-    "pathlib",
-    "zipfile36",
-    "pypiwin32",
-    "sympy",
-    "scipy",
+    "requests", "selenium", "beautifulsoup4", "bs4", "mechanize", "pysocks",
+    "curl2pyreqs", "user_agent", "fake_useragent", "generate_user_agent", "urllib3",
+    "pytelegrambotapi", "python-telegram-bot", "telegram", "telebot", "instaloader",
+    "instagrapi", "instagram-private-api", "colorama", "rich", "pyfiglet", "cfonts",
+    "python-cfonts", "pystyle", "fade", "termcolor", "colored", "pycryptodome",
+    "youtube-dl", "pafy", "uuid", "secrets", "argparse", "twython", "tweepy",
+    "facebook-sdk", "discord.py", "scrapy", "lxml", "html5lib", "pyquery",
+    "selenium-wire", "undetected-chromedriver", "numpy", "pandas", "matplotlib",
+    "pillow", "opencv-python", "cryptography", "bcrypt", "passlib", "jwt",
+    "oauthlib", "tqdm", "progress", "pyperclip", "pyautogui", "keyboard", "mouse",
+    "pygetwindow", "pytest", "unittest2", "debugpy", "pymongo", "mysql-connector-python",
+    "redis", "asyncio", "aiohttp", "multiprocessing", "pydub", "playsound", "pygame",
+    "moviepy", "google-api-python-client", "spotipy", "giphy-client", "imgurpython",
+    "psutil", "glob2", "pathlib", "zipfile36", "pypiwin32", "sympy", "scipy"
 ]
 
-COLORS = {
-    'red': '\033[91m',
-    'green': '\033[92m',
-    'yellow': '\033[93m',
-    'blue': '\033[94m',
-    'purple': '\033[95m',
-    'cyan': '\033[96m',
-    'white': '\033[97m',
-    'reset': '\033[0m'
-}
+# Colors
+GREEN = '\033[92m'
+RED = '\033[91m'
+YELLOW = '\033[93m'
+BLUE = '\033[94m'
+CYAN = '\033[96m'
+RESET = '\033[0m'
 
-def print_color(text, color='white'):
-    print(f"{COLORS.get(color, COLORS['white'])}{text}{COLORS['reset']}")
-
-def is_package_installed(package_name):
-    """Check if package is installed using pkg_resources (more reliable)"""
-    try:
-        pkg_resources.get_distribution(package_name)
-        return True
-    except:
-        return False
+def printc(text, color=RESET):
+    print(f"{color}{text}{RESET}")
 
 def install_package(package):
-    """Install single package with better error handling"""
+    """Package install karo - error aaye toh ignore"""
     try:
-        # Handle special package names
-        pip_package = package
+        # Package name normalize
+        pip_name = package
         if package == "discord.py":
-            pip_package = "discord.py"
+            pip_name = "discord.py"
         elif package == "glob2":
-            pip_package = "glob2"
+            pip_name = "glob2"
         elif package == "zipfile36":
-            pip_package = "zipfile36"
+            pip_name = "zipfile36"
             
+        # Try install
         result = subprocess.run(
-            [sys.executable, "-m", "pip", "install", pip_package],
+            [sys.executable, "-m", "pip", "install", "--quiet", pip_name],
             capture_output=True,
             text=True,
-            timeout=60
+            timeout=30
         )
-        return package, result.returncode == 0, result.stdout
-    except subprocess.TimeoutExpired:
-        return package, False, "Timeout"
-    except Exception as e:
-        return package, False, str(e)
-
-def upgrade_pip():
-    """Upgrade pip and setuptools"""
-    print_color("📦 Upgrading pip and setuptools...", 'cyan')
-    subprocess.run(
-        [sys.executable, "-m", "pip", "install", "--upgrade", "pip", "setuptools", "wheel"],
-        capture_output=True
-    )
+        return package, True if result.returncode == 0 else False
+    except:
+        return package, False  # Error ignore karo
 
 def main():
-    """Main installation function"""
-    
     # Clear screen
     os.system('cls' if os.name == 'nt' else 'clear')
     
     # Banner
-    print_color("="*60, 'cyan')
-    print_color("#           MEGA PIP INSTALLER v2.0           #", 'yellow')
-    print_color("#           All Modules Included              #", 'green')
-    print_color("#           @Aotpy                           #", 'purple')
-    print_color("="*60, 'cyan')
+    printc("="*60, CYAN)
+    printc("#           MEGA PIP INSTALLER v2.0           #", YELLOW)
+    printc("#           All Modules Included              #", GREEN)
+    printc("#           @Aotpy                           #", BLUE)
+    printc("="*60, CYAN)
     
-    print_color(f"\n📊 Total Packages: {len(ALL_PACKAGES)}", 'white')
-    print_color("⏳ Starting installation...\n", 'cyan')
+    printc(f"\n📊 Total Packages: {len(ALL_PACKAGES)}", YELLOW)
+    printc("⏳ Starting installation...\n", CYAN)
     
-    # Upgrade pip first
-    upgrade_pip()
+    # Pehle pip upgrade
+    printc("📦 Upgrading pip...", CYAN)
+    subprocess.run([sys.executable, "-m", "pip", "install", "--upgrade", "pip", "--quiet"], 
+                   capture_output=True)
     
-    # Separate built-in modules (these don't need installation)
-    builtin_modules = ['os', 'sys', 'time', 'datetime', 'random', 'string', 
-                       'json', 're', 'math', 'hashlib', 'threading', 'argparse',
-                       'logging', 'platform', 'shutil', 'subprocess', 'concurrent',
-                       'multiprocessing', 'asyncio', 'pathlib', 'pickle']
+    # Built-in modules (check nahi karenge, seedha install karenge)
+    builtin = ['os', 'sys', 'time', 'datetime', 'random', 'string', 
+               'json', 're', 'math', 'hashlib', 'threading', 'argparse',
+               'logging', 'platform', 'shutil', 'subprocess', 'concurrent',
+               'multiprocessing', 'asyncio', 'pathlib', 'pickle']
     
-    # Filter packages to install
-    to_install = []
-    skipped = []
+    # Filter karo sirf external packages
+    to_install = [p for p in ALL_PACKAGES if p not in builtin]
     
-    print_color("\n🔍 Checking installed packages...", 'cyan')
+    printc(f"📦 Installing {len(to_install)} packages...\n", GREEN)
     
-    for package in ALL_PACKAGES:
-        if package in builtin_modules:
-            skipped.append(package)
-            continue
-            
-        # Handle special package names for checking
-        check_name = package
-        if package == "discord.py":
-            check_name = "discord"
-        elif package == "glob2":
-            check_name = "glob2"
-        elif package == "zipfile36":
-            check_name = "zipfile36"
-            
-        if is_package_installed(check_name):
-            skipped.append(package)
-        else:
-            to_install.append(package)
+    installed = []
+    failed = []
     
-    print_color(f"\n📦 Packages to install: {len(to_install)}", 'yellow')
-    print_color(f"✅ Already installed/skipped: {len(skipped)}", 'green')
-    
-    if len(to_install) == 0:
-        print_color("\n✨ All packages are already installed!", 'green')
-    else:
-        print_color(f"\n⚡ Installing {len(to_install)} packages...", 'green')
+    # Threads ke saath fast installation
+    with ThreadPoolExecutor(max_workers=5) as executor:
+        futures = {executor.submit(install_package, pkg): pkg for pkg in to_install}
         
-        installed = []
-        failed = []
-        
-        # Install with threads for speed
-        with ThreadPoolExecutor(max_workers=3) as executor:
-            futures = {executor.submit(install_package, pkg): pkg for pkg in to_install}
+        for i, future in enumerate(as_completed(futures), 1):
+            package, success = future.result()
             
-            for i, future in enumerate(as_completed(futures), 1):
-                package, success, _ = future.result()
-                
-                if success:
-                    installed.append(package)
-                    status = f"✅ [{i}/{len(to_install)}] {package}"
-                    print_color(status, 'green')
-                else:
-                    failed.append(package)
-                    status = f"❌ [{i}/{len(to_install)}] {package}"
-                    print_color(status, 'red')
+            if success:
+                installed.append(package)
+                printc(f"✅ [{i}/{len(to_install)}] {package}", GREEN)
+            else:
+                failed.append(package)
+                printc(f"⚠️  [{i}/{len(to_install)}] {package} - Skipped", YELLOW)
+            
+            # Thoda delay for smooth output
+            time.sleep(0.1)
     
     # Final Report
-    print_color("\n" + "="*60, 'cyan')
-    print_color("🎉 INSTALLATION COMPLETE!", 'yellow')
-    print_color("="*60, 'cyan')
+    printc("\n" + "="*60, CYAN)
+    printc("🎉 INSTALLATION COMPLETE!", YELLOW)
+    printc("="*60, CYAN)
     
-    print_color(f"\n📊 FINAL STATISTICS:", 'purple')
-    print_color(f"   ✅ Total packages processed: {len(ALL_PACKAGES)}", 'cyan')
+    printc(f"\n📊 FINAL STATISTICS:", BLUE)
+    printc(f"   ✅ Successfully installed: {len(installed)}", GREEN)
+    printc(f"   ⚠️  Failed/Skipped: {len(failed)}", YELLOW)
+    printc(f"   📦 Total processed: {len(to_install)}", CYAN)
     
-    if 'installed' in locals():
-        print_color(f"   ✅ Newly installed: {len(installed)}", 'green')
-    print_color(f"   ⏭️  Already installed/skipped: {len(skipped)}", 'yellow')
-    
-    if 'failed' in locals() and failed:
-        print_color(f"   ❌ Failed: {len(failed)}", 'red')
-        print_color(f"\n⚠️  Failed packages ({len(failed)}):", 'red')
-        for f in failed[:10]:
-            print_color(f"   • {f}", 'red')
-        if len(failed) > 10:
-            print_color(f"   ... and {len(failed)-10} more", 'red')
-    
-    print_color("\n" + "="*60, 'cyan')
-    print_color("🔗 Join @Aotpy for more tools!", 'green')
-    print_color("="*60, 'cyan')
-    
-    # Save log
+    # Log save
     with open('install_log.txt', 'w') as f:
-        f.write(f"Total packages: {len(ALL_PACKAGES)}\n")
-        if 'installed' in locals():
-            f.write(f"Newly installed: {', '.join(installed)}\n")
-        if 'failed' in locals() and failed:
-            f.write(f"Failed: {', '.join(failed)}\n")
-        f.write(f"Skipped: {', '.join(skipped)}\n")
+        f.write(f"Installed ({len(installed)}): {', '.join(installed[:20])}\n")
+        if len(installed) > 20:
+            f.write(f"... and {len(installed)-20} more\n")
+        f.write(f"\nFailed/Skipped ({len(failed)}): {', '.join(failed[:20])}\n")
     
-    print_color("\n📝 Log saved to install_log.txt", 'white')
+    printc("\n📝 Log saved to install_log.txt", GREEN)
     
-    # Press Enter to continue
-    input("\nPress Enter to open owner's contact - t.me/Aotpy")
+    # Final message
+    printc("\n" + "="*60, CYAN)
+    printc("🔗 Press Enter to open - t.me/Aotpy", GREEN)
+    printc("="*60, CYAN)
+    
+    # Enter press karne ka option
+    input()
+    
+    # Try to open telegram link
+    try:
+        if os.name == 'nt':  # Windows
+            os.system(f"start https://t.me/Aotpy")
+        else:  # Linux/Mac
+            os.system(f"xdg-open https://t.me/Aotpy")
+    except:
+        pass  # Agar link na khule toh ignore
 
 if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print_color("\n\n⚠️  Installation interrupted by user!", 'red')
+        printc("\n\n⚠️  Installation interrupted by user!", RED)
         sys.exit(1)
     except Exception as e:
-        print_color(f"\n❌ Error: {e}", 'red')
-        sys.exit(1)
+        # Koi bhi error aaye toh ignore karo aur continue karo
+        printc(f"\n⚠️  Minor error: {e}", YELLOW)
+        printc("Continuing anyway...", GREEN)
+        main()
