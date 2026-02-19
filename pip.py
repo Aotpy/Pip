@@ -1,7 +1,7 @@
 import os
 import sys
 import subprocess
-import importlib.util
+import pkg_resources
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 ALL_PACKAGES = [
@@ -33,7 +33,7 @@ ALL_PACKAGES = [
     "termcolor",
     "colored",
     "pycryptodome",
-    "youtube_dl",
+    "youtube-dl",
     "pafy",
     "uuid",
     "secrets",
@@ -71,7 +71,6 @@ ALL_PACKAGES = [
     "debugpy",
     "pymongo",
     "mysql-connector-python",
-    "sqlite3",
     "redis",
     "asyncio",
     "aiohttp",
@@ -88,14 +87,10 @@ ALL_PACKAGES = [
     "psutil",
     "platform",
     "shutil",
-    "glob",
-    "subprocess",
+    "glob2",
     "pathlib",
-    "zipfile",
-    "tarfile",
-    "pickle",
-    "math",
-    "statistics",
+    "zipfile36",
+    "pypiwin32",
     "sympy",
     "scipy",
 ]
@@ -114,31 +109,53 @@ COLORS = {
 def print_color(text, color='white'):
     print(f"{COLORS.get(color, COLORS['white'])}{text}{COLORS['reset']}")
 
-def check_package(package):
-    return importlib.util.find_spec(package) is not None
+def is_package_installed(package_name):
+    """Check if package is installed using pkg_resources (more reliable)"""
+    try:
+        pkg_resources.get_distribution(package_name)
+        return True
+    except:
+        return False
 
 def install_package(package):
+    """Install single package with better error handling"""
     try:
+        # Handle special package names
+        pip_package = package
+        if package == "discord.py":
+            pip_package = "discord.py"
+        elif package == "glob2":
+            pip_package = "glob2"
+        elif package == "zipfile36":
+            pip_package = "zipfile36"
+            
         result = subprocess.run(
-            [sys.executable, "-m", "pip", "install", "--quiet", package],
+            [sys.executable, "-m", "pip", "install", pip_package],
             capture_output=True,
             text=True,
-            timeout=30
+            timeout=60
         )
         return package, result.returncode == 0, result.stdout
-    except:
-        return package, False, "Timeout/Error"
+    except subprocess.TimeoutExpired:
+        return package, False, "Timeout"
+    except Exception as e:
+        return package, False, str(e)
 
 def upgrade_pip():
-    print_color("📦 Upgrading pip...", 'cyan')
+    """Upgrade pip and setuptools"""
+    print_color("📦 Upgrading pip and setuptools...", 'cyan')
     subprocess.run(
-        [sys.executable, "-m", "pip", "install", "--upgrade", "pip"],
+        [sys.executable, "-m", "pip", "install", "--upgrade", "pip", "setuptools", "wheel"],
         capture_output=True
     )
 
 def main():
+    """Main installation function"""
+    
+    # Clear screen
     os.system('cls' if os.name == 'nt' else 'clear')
     
+    # Banner
     print_color("="*60, 'cyan')
     print_color("#           MEGA PIP INSTALLER v2.0           #", 'yellow')
     print_color("#           All Modules Included              #", 'green')
@@ -148,55 +165,81 @@ def main():
     print_color(f"\n📊 Total Packages: {len(ALL_PACKAGES)}", 'white')
     print_color("⏳ Starting installation...\n", 'cyan')
     
+    # Upgrade pip first
     upgrade_pip()
     
-    builtin = ['os', 'sys', 'time', 'datetime', 'random', 'string', 
-               'json', 're', 'math', 'hashlib', 'threading', 'argparse']
+    # Separate built-in modules (these don't need installation)
+    builtin_modules = ['os', 'sys', 'time', 'datetime', 'random', 'string', 
+                       'json', 're', 'math', 'hashlib', 'threading', 'argparse',
+                       'logging', 'platform', 'shutil', 'subprocess', 'concurrent',
+                       'multiprocessing', 'asyncio', 'pathlib', 'pickle']
     
-    to_install = [p for p in ALL_PACKAGES if p not in builtin]
-    
-    print_color(f"📦 External packages to install: {len(to_install)}", 'yellow')
-    print_color(f"✅ Built-in modules: {len(builtin)}", 'green')
-    
-    installed = []
-    failed = []
+    # Filter packages to install
+    to_install = []
     skipped = []
     
     print_color("\n🔍 Checking installed packages...", 'cyan')
-    for package in to_install:
-        if check_package(package.replace('-', '_')):
+    
+    for package in ALL_PACKAGES:
+        if package in builtin_modules:
             skipped.append(package)
-    
-    to_install = [p for p in to_install if p not in skipped]
-    
-    print_color(f"\n⚡ Installing {len(to_install)} packages...", 'green')
-    
-    with ThreadPoolExecutor(max_workers=5) as executor:
-        futures = {executor.submit(install_package, pkg): pkg for pkg in to_install}
-        
-        for i, future in enumerate(as_completed(futures), 1):
-            package, success, _ = future.result()
+            continue
             
-            if success:
-                installed.append(package)
-                status = f"✅ [{i}/{len(to_install)}] {package}"
-                print_color(status, 'green')
-            else:
-                failed.append(package)
-                status = f"❌ [{i}/{len(to_install)}] {package}"
-                print_color(status, 'red')
+        # Handle special package names for checking
+        check_name = package
+        if package == "discord.py":
+            check_name = "discord"
+        elif package == "glob2":
+            check_name = "glob2"
+        elif package == "zipfile36":
+            check_name = "zipfile36"
+            
+        if is_package_installed(check_name):
+            skipped.append(package)
+        else:
+            to_install.append(package)
     
+    print_color(f"\n📦 Packages to install: {len(to_install)}", 'yellow')
+    print_color(f"✅ Already installed/skipped: {len(skipped)}", 'green')
+    
+    if len(to_install) == 0:
+        print_color("\n✨ All packages are already installed!", 'green')
+    else:
+        print_color(f"\n⚡ Installing {len(to_install)} packages...", 'green')
+        
+        installed = []
+        failed = []
+        
+        # Install with threads for speed
+        with ThreadPoolExecutor(max_workers=3) as executor:
+            futures = {executor.submit(install_package, pkg): pkg for pkg in to_install}
+            
+            for i, future in enumerate(as_completed(futures), 1):
+                package, success, _ = future.result()
+                
+                if success:
+                    installed.append(package)
+                    status = f"✅ [{i}/{len(to_install)}] {package}"
+                    print_color(status, 'green')
+                else:
+                    failed.append(package)
+                    status = f"❌ [{i}/{len(to_install)}] {package}"
+                    print_color(status, 'red')
+    
+    # Final Report
     print_color("\n" + "="*60, 'cyan')
     print_color("🎉 INSTALLATION COMPLETE!", 'yellow')
     print_color("="*60, 'cyan')
     
     print_color(f"\n📊 FINAL STATISTICS:", 'purple')
-    print_color(f"   ✅ Successfully installed: {len(installed)}", 'green')
-    print_color(f"   ⏭️  Already installed: {len(skipped)}", 'yellow')
-    print_color(f"   ❌ Failed: {len(failed)}", 'red')
-    print_color(f"   📦 Total modules: {len(ALL_PACKAGES)}", 'cyan')
+    print_color(f"   ✅ Total packages processed: {len(ALL_PACKAGES)}", 'cyan')
     
-    if failed:
+    if 'installed' in locals():
+        print_color(f"   ✅ Newly installed: {len(installed)}", 'green')
+    print_color(f"   ⏭️  Already installed/skipped: {len(skipped)}", 'yellow')
+    
+    if 'failed' in locals() and failed:
+        print_color(f"   ❌ Failed: {len(failed)}", 'red')
         print_color(f"\n⚠️  Failed packages ({len(failed)}):", 'red')
         for f in failed[:10]:
             print_color(f"   • {f}", 'red')
@@ -207,12 +250,18 @@ def main():
     print_color("🔗 Join @Aotpy for more tools!", 'green')
     print_color("="*60, 'cyan')
     
+    # Save log
     with open('install_log.txt', 'w') as f:
-        f.write(f"Installed: {', '.join(installed)}\n")
-        f.write(f"Failed: {', '.join(failed)}\n")
+        f.write(f"Total packages: {len(ALL_PACKAGES)}\n")
+        if 'installed' in locals():
+            f.write(f"Newly installed: {', '.join(installed)}\n")
+        if 'failed' in locals() and failed:
+            f.write(f"Failed: {', '.join(failed)}\n")
         f.write(f"Skipped: {', '.join(skipped)}\n")
     
     print_color("\n📝 Log saved to install_log.txt", 'white')
+    
+    # Press Enter to continue
     input("\nPress Enter to open owner's contact - t.me/Aotpy")
 
 if __name__ == "__main__":
