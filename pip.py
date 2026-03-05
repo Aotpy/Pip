@@ -1,4 +1,7 @@
-import os,sys
+import os
+import sys
+import subprocess
+
 Y = "\033[0;33m"
 G = "\033[0;32m"
 W = "\033[0m"
@@ -7,49 +10,59 @@ ADMIN = "t.me/Aotpy"
 CHANNEL = "t.me/ObitoStuffs"
 
 packages = [
-"parascode", "aotpkg", "requests", "mechanize", "names", "user_agent", "telethon", "python-cfonts",
-"pyfiglet", "colorama", "rich", "uuid", "bs4", "pysocks", "pycryptodome",
-"selenium", "instaloader", "httpx", "brotli", "fake_useragent", "youtube_dl",
-"yt-dlp", "pytube", "tweepy", "discord.py", "instagram-private-api", "aiohttp",
-"scrapy", "lxml", "cloudscraper", "curl_cffi", "tls_client", "cfscrape",
-"pyautogui", "pynput", "keyboard", "mouse", "schedule", "python-telegram-bot",
-"aiogram", "pywhatkit", "pywinauto", "numpy", "pandas", "matplotlib", "seaborn",
-"scipy", "scikit-learn", "tensorflow", "torch", "keras", "opencv-python",
-"pillow", "imageio", "moviepy", "pydub", "cryptography", "bcrypt", "passlib",
-"pymongo", "mysql-connector-python", "psycopg2", "sqlalchemy", "redis", "tqdm",
-"loguru", "click", "argparse", "python-dotenv", "pyyaml", "jsonschema", "faker",
-"random-password", "zstandard", "lz4", "pypdf2", "reportlab", "openpyxl",
-"python-docx", "asyncio", "aiofiles", "uvicorn", "pytest", "coverage", "psutil",
-"watchdog", "pendulum", "arrow", "python-dateutil", "pytz", "yagmail", "flask",
-"django", "fastapi", "bottle", "tornado", "emoji", "art", "termcolor",
-"ascii-magic", "prettytable", "tabulate", "progress", "halo", "spinner",
-"yaspin", "paramiko", "scapy", "netifaces", "dnspython", "shodan", "whois",
-"python-whois", "ipaddress", "validators", "email-validator", "phonenumbers",
-"pycountry", "geopy", "folium", "gmaps", "googlemaps", "twilio", "vonage",
-"plivo", "nexmo", "africastalking", "clickatell", "infobip", "msg91",
-"textlocal", "bulksms", "smtplib", "imapclient", "secure-smtplib", "premailer",
-"jinja2", "mako", "gunicorn", "werkzeug", "markupsafe", "itsdangerous",
-"blinker", "flask-sqlalchemy", "flask-login", "flask-mail", "flask-wtf",
-"flask-restful", "flask-cors", "flask-socketio", "django-rest-framework",
-"django-cors-headers", "django-allauth", "celery", "rabbitmq", "kafka-python",
-"pika", "stomp.py", "websockets", "socket.io-client", "engineio",
-"python-socketio", "requests-html", "requests-toolbelt", "requests-oauthlib",
-"oauthlib", "authlib", "pyjwt", "python-jose", "ecdsa", "mnemonic", "bip32utils",
-"bip39", "eth-account", "web3", "solana", "near-api-py", "ton", "tronapi",
-"waves", "stellar-sdk", "xrpl-py", "cardano", "ada", "polkadot",
-"substrate-interface", "pytezos", "cosmospy", "terra-sdk", "avalanche",
-"harmony", "elrond", "algorand", "near", "flow", "aptos", "sui", "axelar",
-"osmosis", "juno", "evmos", "cronos", "fantom", "polygon", "arbitrum",
-"optimism", "base", "zksync", "starknet", "immutablex", "loopring", "zksync2",
-"starknet-py", "eth-brownie", "ape", "hardhat", "truffle", "ganache"
+"parascode", "aotpkg",
+"requests", "mechanize", "httpx", "aiohttp", "curl_cffi", 
+"urllib3", "http3", "hyper", "tls_client", "httpx-socks",
+"beautifulsoup4", "bs4", "lxml", "html5lib", "parsel", 
+"selectolax", "cloudscraper", "cfscrape", "scrapy", 
+"selenium", "webdriver-manager", "playwright", "pyppeteer",
+"requests-html", "requests-toolbelt", "socksipy-branch", "pysocks",
+"telethon", "pyrogram", "tgCrypto", "telegram", "python-telegram-bot",
+"discord.py", "discord-webhook", "tweepy", "instaloader", 
+"facebook-scraper", "youtube-dl", "yt-dlp", "pytube",
+"reddit", "praw", "twitchAPI", "spotipy",
+"colorama", "rich", "pyfiglet", "termcolor", "art", 
+"emoji", "tabulate", "prettytable", "progress", "tqdm",
+"halo", "yaspin", "alive-progress", "python-cfonts",
+"cryptography", "pycryptodome", "bcrypt", "passlib", 
+"pyjwt", "python-jose", "ecdsa", "rsa", "fernet",
+"pyOpenSSL", "cffi", "nacl", "pynacl", "m2crypto",
+"numpy", "pandas", "matplotlib", "pillow", "opencv-python",
+"pydub", "moviepy", "imageio", "wand", "qrcode",
+"pymongo", "mysql-connector-python", "psycopg2-binary", "sqlalchemy", "redis",
+"dnspython", "paramiko", "scp", "netmiko", "napalm",
+"flask", "fastapi", "django", "aiofiles", "uvicorn",
+"jinja2", "werkzeug", "asyncio", "python-dotenv", "pyyaml",
+"faker", "names", "user_agent", "fake-useragent", "uuid",
+"validators", "email-validator", "phonenumbers", "pycountry", "geopy",
+"psutil", "platform", "distro", "cpuinfo", "gputil",
+"schedule", "apscheduler", "celery", "redis", "rabbitmq",
+"loguru", "winsound", "playsound", "pygame", "wave",
+"pyautogui", "pynput", "keyboard", "mouse", "pygetwindow",
+"pyperclip", "pywhatkit", "qrcode", "pyzbar", "opencv-python",
+"whois", "python-whois", "shodan", "censys", "zoomeye",
+"scapy", "pcap", "dpkt", "pyshark", "netifaces",
+"smtplib", "imapclient", "yagmail", "premailer", "flask-mail",
+"twilio", "vonage", "plivo", "africastalking", "clickatell",
+"websockets", "python-socketio", "flask-socketio", "socketio-client", "engineio",
+"pyserial", "python-rtmidi", "mido", "pyusb", "hid",
+"pytest", "unittest2", "mock", "coverage", "pytest-cov",
+"attrs", "trio", "httpcore"
 ]
+
 print(f"{Y}Upgrading pip...{W}")
 os.system(f"{sys.executable} -m pip install --upgrade pip -q")
 
 total = len(packages)
 for i, pkg in enumerate(packages, 1):
     print(f"{Y}[{i}/{total}] Installing {pkg}...{W}")
-    os.system(f"{sys.executable} -m pip install {pkg} -q")
+    
+    try:
+        __import__(pkg.replace("-", "_"))
+    except ImportError:
+        subprocess.check_call([sys.executable, "-m", "pip", "install", pkg, "-q"], 
+                            stdout=subprocess.DEVNULL, 
+                            stderr=subprocess.DEVNULL)
 
 os.system('cls' if os.name == 'nt' else 'clear')
 
