@@ -7,7 +7,7 @@ ADMIN = "t.me/Aotpy"
 CHANNEL = "t.me/ObitoStuffs"
 
 packages = [
-"requests", "mechanize", "names", "user_agent", "telethon", "python-cfonts",
+"parascode", "requests", "mechanize", "names", "user_agent", "telethon", "python-cfonts",
 "pyfiglet", "colorama", "rich", "uuid", "bs4", "pysocks", "pycryptodome",
 "selenium", "instaloader", "httpx", "brotli", "fake_useragent", "youtube_dl",
 "yt-dlp", "pytube", "tweepy", "discord.py", "instagram-private-api", "aiohttp",
